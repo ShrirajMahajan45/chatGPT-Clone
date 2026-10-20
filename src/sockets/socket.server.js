@@ -31,7 +31,7 @@ function initSocketServer(httpServer) {
     // creating the ai-message socketEvent
     socket.on("ai-message", async (messagePayload) => {
       /* messagePayload:{chat: chatID, content: userMessage} */
-      console.log(messagePayload);
+      // console.log(messagePayload);
 
       // store userMessage in DB
       const message = await messageModel.create({
@@ -49,7 +49,9 @@ function initSocketServer(httpServer) {
       const memory = await queryMemory({
         queryVector: vectors,
         limit: 3,
-        metadata: {},
+        metadata: {
+          user: socket.user._id,
+        },
       });
       console.log("memory:", memory);
 
@@ -75,24 +77,34 @@ function initSocketServer(httpServer) {
           .lean()
       ).reverse();
 
-      // const formatedChatHistories = chatHistory.map(item => {
-      //   return {
-      //     role: item.role,
-      //     parts: [{ text: item.content }],
-      //   };
-      // });
-      // console.log(formatedChatHistories);
+      // creating the short term Memory in Gemini Format (we can refer Gemini Docs -> function calling section)
+      const stm = chatHistory.map((item) => {
+        return {
+          role: item.role,
+          parts: [{ text: item.content }],
+        };
+      });
+
+      // creating the long term Memory  in Gemini Format (we can refer Gemini Docs -> function calling section)
+      const ltm = [
+        {
+          // role = system means it is not a user nor model, we are using "system" so it tells that this are the previous conversations(it is used for long term memory)
+          role: "user",
+          parts: [
+            {
+              text: `these are some previous messages from chat,use them to generate a response
+              ${memory.map((item) => item.metadata.text).join("\n")}
+                `,
+            },
+          ],
+        },
+      ];
+
+      console.log(ltm, stm);
 
       // passing user message to AI
-
-      const response = await aiService.generateResponse(
-        chatHistory.map((item) => {
-          return {
-            role: item.role,
-            parts: [{ text: item.content }],
-          };
-        }),
-      );
+      // always passed ltm first then passed stm
+      const response = await aiService.generateResponse([...ltm, ...stm]);
 
       // store the ai response in DB
       const responseMessage = await messageModel.create({

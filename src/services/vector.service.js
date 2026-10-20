@@ -14,6 +14,7 @@ async function createMemory({ vectors, metadata, messageId }) {
         metadata: {
           chat: String(metadata.chat),
           user: String(metadata.user),
+          text: String(metadata.text),
         },
       },
     ],
@@ -26,7 +27,11 @@ async function queryMemory({ queryVector, limit = 5, metadata }) {
   const data = await cohortChatGptIndex.query({
     vector: queryVector,
     topK: limit,
-    filter: metadata ? { metadata } : undefined,
+    filter: metadata
+      ? {
+          user: { $eq: String(metadata.user) },
+        }
+      : undefined,
     includeMetadata: true,
   });
 

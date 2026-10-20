@@ -10,7 +10,7 @@ async function generateResponse(content) {
   // return interaction.output_text;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.5-flash",
+    model: "gemini-3.8-flash",
     contents: content,
   });
 
