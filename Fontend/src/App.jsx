@@ -1,5 +1,6 @@
 
 import AppRoutes from "./AppRoutes";
+import Home from "./pages/Home";
 
 const App = () => {
   return (
