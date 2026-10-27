@@ -1,6 +1,4 @@
-
-import AppRoutes from "./AppRoutes";
-import Home from "./pages/Home";
+import AppRoutes from "./utils/AppRoutes";
 
 const App = () => {
   return (

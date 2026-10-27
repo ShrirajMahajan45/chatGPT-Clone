@@ -7,27 +7,43 @@ const messageModel = require("../models/message.model");
 const { createMemory, queryMemory } = require("../services/vector.service");
 
 function initSocketServer(httpServer) {
-  const io = new Server(httpServer, {});
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://localhost:5173",
+      allowedHeaders: ["my-custom-header"],
+      credentials: true,
+    },
+  });
 
   // middleware to check incomming req for socketIO connection to the server is from authenticated(Valid) user or not
   io.use(async (socket, next) => {
-    const cookies = cookie.parseCookie(socket.handshake.headers?.cookie || "");
-
-    if (!cookies.token) {
-      next(new Error("Authentication error: No token provided"));
-    }
-
     try {
+      const cookies = cookie.parseCookie(
+        socket.handshake.headers?.cookie || "",
+      );
+
+      if (!cookies.token) {
+        next(new Error("Authentication error: No token provided"));
+      }
+
       const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET);
       const user = await userModel.findById(decoded.id);
+
+      if (!user) {
+        return next(new Error("User not found"));
+      }
+
       socket.user = user;
       next();
     } catch (error) {
+      console.error("Socket authentication failed:", error.message);
       next(new Error("Authentication error: No token provided"));
     }
   });
 
   io.on("connection", (socket) => {
+    console.log("connected to socketIO Successfully");
+
     // creating the ai-message socketEvent
     socket.on("ai-message", async (messagePayload) => {
       /* messagePayload:{chat: chatID, content: userMessage} */
@@ -58,7 +74,6 @@ function initSocketServer(httpServer) {
         }),
         aiService.generateVector(messagePayload.content),
       ]);
-
 
       /* 
         // step 4: Search Vector Database (PineconeDB): query/search the userMessage in vectorDb(pinconeDB), means finding anything related info to currUsermessage is available in vectorDB or not
@@ -104,7 +119,6 @@ function initSocketServer(httpServer) {
           .then((messages) => messages.reverse()),
       ]);
 
-      
       // step 5: Store User Message in PineconeDB: storing users messages in pineconeDB  longTermMemory Implementation
       await createMemory({
         messageId: message._id,
