@@ -2,36 +2,66 @@ const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({});
 
+
+const sleep = (ms) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
 async function generateResponse(content) {
-  // const interaction = await ai.interactions.create({
-  //   model: "gemini-3.5-flash",
-  //   input: content,
-  // });
-  // return interaction.output_text;
+  const maxAttempts = 3;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
-    contents: content,
-    config: {
-      // temperature values lies between 0<= n <= 2, jitni jyada temp val utna creative res ai deto pn kadhi kadhi wrong ans pn deto
-      temperature: 0.3,
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: content,
+        config: {
+          temperature: 0.3,
+          systemInstruction: `
+            You are an AI assistant.
+            Answer accurately.
+            If you don't know something, say so.
+          `,
+        },
+      });
 
-      systemInstruction: `
-      <role>
-        You are an AI assistant.
-      </role>
+      return response.text;
+    } catch (error) {
+      const status = Number(error.status ?? error.code);
 
-      <rules>
-        <rule>Answer accurately.</rule>
-        <rule>Keep answers short.</rule>
-        <rule>If you don't know something, say so.</rule>
-      </rules>
-  `,
-    },
-  });
+      const retryableStatuses = [
+        408, 429, 500, 502, 503, 504,
+      ];
 
-  return response.text;
+      const shouldRetry =
+        retryableStatuses.includes(status) &&
+        attempt < maxAttempts;
+
+      if (!shouldRetry) {
+        console.error(
+          `Gemini request failed after attempt ${attempt}:`,
+          status,
+          error.message
+        );
+
+        throw error;
+      }
+
+      // Retry after approximately 1 second, then 2 seconds.
+      // Small random variation prevents synchronized retries.
+      const delay =
+        1000 * 2 ** (attempt - 1) +
+        Math.floor(Math.random() * 300);
+
+      console.warn(
+        `Gemini returned ${status}. Retrying in ${delay}ms ` +
+        `(attempt ${attempt + 1}/${maxAttempts}).`
+      );
+
+      await sleep(delay);
+    }
+  }
 }
+
 
 async function generateVector(content) {
   const response = await ai.models.embedContent({

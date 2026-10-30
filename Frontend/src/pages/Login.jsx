@@ -1,68 +1,95 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const Login = () => {
+  const navigate = useNavigate();
+
+  // Store the email and password entered by the user.
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const navigate = useNavigate()
 
+  // Manage loading and error states.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Handle input changes
+  // Update the form state whenever the user types.
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((prevData) => ({
+      ...prevData,
       [name]: value,
     }));
   };
 
-  // Handle form submission
+  // Send login details to the backend.
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError("");
     setLoading(true);
-    console.log(formData.email)
-    console.log(formData.password)
 
     try {
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:3000/api/auth/login",
         {
           email: formData.email,
           password: formData.password,
         },
-        { withCredentials: true },
+        {
+          withCredentials: true,
+        }
       );
-      console.log("Login successful:", response);
-      navigate("/")
 
-      // Handle the response, e.g. navigate to your dashboard
+      // Redirect to the home page after successful login.
+      navigate("/");
     } catch (err) {
-      setError(err.message || "Something went wrong");
+      // Display the error message returned by the backend.
+      setError(
+        err.response?.data?.message || "Unable to sign in. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4 py-10 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-2xl sm:p-8">
-        <h1 className="text-3xl font-bold">Welcome back</h1>
-        <p className="mt-2 text-sm text-gray-400">
-          Sign in to continue to your account.
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-[#212121] px-4 py-10 text-white">
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+      {/* Login card */}
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#2b2b2b] p-6 shadow-xl sm:p-8">
+
+        {/* Application branding */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-[#212121]">
+            AI
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Welcome back
+          </h1>
+
+          <p className="mt-2 text-sm text-gray-400">
+            Sign in to continue your conversations.
+          </p>
+        </div>
+
+        {/* Login form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* Email field */}
           <div>
-            <label htmlFor="email" className="mb-2 block text-sm">
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-gray-200"
+            >
               Email address
             </label>
+
             <input
               id="email"
               type="email"
@@ -72,14 +99,19 @@ const Login = () => {
               placeholder="you@example.com"
               autoComplete="email"
               required
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 outline-none focus:border-violet-500"
+              className="w-full rounded-xl border border-white/10 bg-[#353535] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-white/40 focus:ring-2 focus:ring-white/5"
             />
           </div>
 
+          {/* Password field */}
           <div>
-            <label htmlFor="password" className="mb-2 block text-sm">
+            <label
+              htmlFor="password"
+              className="mb-2 block text-sm font-medium text-gray-200"
+            >
               Password
             </label>
+
             <input
               id="password"
               type="password"
@@ -89,34 +121,41 @@ const Login = () => {
               placeholder="Enter your password"
               autoComplete="current-password"
               required
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 outline-none focus:border-violet-500"
+              className="w-full rounded-xl border border-white/10 bg-[#353535] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-white/40 focus:ring-2 focus:ring-white/5"
             />
           </div>
 
+          {/* Display backend or login errors */}
           {error && (
-            <p role="alert" className="text-sm text-red-400">
+            <p
+              role="alert"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400"
+            >
               {error}
             </p>
           )}
 
+          {/* Submit button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-violet-600 py-3 font-semibold transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl bg-white py-3 text-sm font-semibold text-[#212121] transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-400">
+        {/* Link to registration page */}
+        <p className="mt-7 text-center text-sm text-gray-400">
           Don't have an account?{" "}
           <Link
             to="/register"
-            className="text-violet-400 hover:text-violet-300"
+            className="font-medium text-white underline-offset-4 transition hover:underline"
           >
             Create account
           </Link>
         </p>
+
       </div>
     </div>
   );

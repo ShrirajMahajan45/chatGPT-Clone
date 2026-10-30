@@ -12,7 +12,15 @@ async function authUser(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     const user = await userModel.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found. Please log in again.",
+      });
+    }
+
     req.user = user;
     next();
   } catch (error) {
@@ -22,4 +30,4 @@ async function authUser(req, res, next) {
   }
 }
 
-module.exports = {authUser};
+module.exports = { authUser };

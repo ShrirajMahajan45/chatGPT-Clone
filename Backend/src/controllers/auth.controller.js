@@ -3,13 +3,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 async function registerController(req, res) {
-
   const {
     fullName: { firstName, lastName },
     email,
     password,
   } = req.body;
-
 
   // check user is already present or not
   const isUserAlreadyExists = await userModel.findOne({
@@ -93,4 +91,30 @@ async function loginController(req, res) {
   });
 }
 
-module.exports = { registerController, loginController };
+// Logout user
+const logoutController = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    return res.status(200).json({
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+
+    return res.status(500).json({
+      message: "Unable to log out",
+    });
+  }
+};
+
+module.exports = {
+  // Keep your existing controller exports
+  registerController,
+  loginController,
+  logoutController,
+};

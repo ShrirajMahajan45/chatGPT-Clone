@@ -1,9 +1,12 @@
+
 import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
+
+  // Store all registration form values.
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -12,35 +15,36 @@ const Register = () => {
     confirmPassword: "",
   });
 
+  // Manage loading and error states.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
+  // Update the form state whenever the user types.
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((prevData) => ({
+      ...prevData,
       [name]: value,
     }));
   };
 
+  // Validate the form and register the user.
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
 
-    // Validate password confirmation
+    setError("");
+
+    // Check whether both passwords match.
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords do not match.");
       return;
     }
 
     setLoading(true);
 
     try {
-
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:3000/api/auth/register",
         {
           email: formData.email,
@@ -52,39 +56,58 @@ const Register = () => {
         },
         {
           withCredentials: true,
-        },
+        }
       );
 
-      setSuccess(response.data.message || "Registration successful!");
-
-      console.log("Registered user response:", response);
+      // Redirect to login after successful registration.
       navigate("/login");
-
-      // Optionally navigate to login after registration.
     } catch (err) {
-      setError(err.message || "Something went wrong");
+      // Display the error message returned by the backend.
+      setError(
+        err.response?.data?.message ||
+          "Unable to create your account. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4 py-10 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-2xl sm:p-8">
-        <h1 className="text-3xl font-bold">Create an account</h1>
-        <p className="mt-2 text-sm text-gray-400">
-          Join us by creating your account.
-        </p>
+    <div className="flex min-h-screen items-center justify-center bg-[#212121] px-4 py-10 text-white">
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      {/* Registration card */}
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#2b2b2b] p-6 shadow-xl sm:p-8">
+
+        {/* Application branding */}
+        <div className="mb-7 text-center">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-bold text-[#212121]">
+            AI
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Create your account
+          </h1>
+
+          <p className="mt-2 text-sm text-gray-400">
+            Get started and enjoy your AI conversations.
+          </p>
+        </div>
+
+        {/* Registration form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          {/* First name and last name */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+            {/* First name */}
             <div>
               <label
                 htmlFor="firstName"
-                className="mb-2 block text-sm font-medium"
+                className="mb-2 block text-sm font-medium text-gray-200"
               >
-                First Name
+                First name
               </label>
+
               <input
                 id="firstName"
                 type="text"
@@ -94,17 +117,19 @@ const Register = () => {
                 placeholder="First name"
                 autoComplete="given-name"
                 required
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white outline-none focus:border-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-[#353535] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-white/40 focus:ring-2 focus:ring-white/5"
               />
             </div>
 
+            {/* Last name */}
             <div>
               <label
                 htmlFor="lastName"
-                className="mb-2 block text-sm font-medium"
+                className="mb-2 block text-sm font-medium text-gray-200"
               >
-                Last Name
+                Last name
               </label>
+
               <input
                 id="lastName"
                 type="text"
@@ -114,15 +139,20 @@ const Register = () => {
                 placeholder="Last name"
                 autoComplete="family-name"
                 required
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white outline-none focus:border-violet-500"
+                className="w-full rounded-xl border border-white/10 bg-[#353535] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-white/40 focus:ring-2 focus:ring-white/5"
               />
             </div>
           </div>
 
+          {/* Email field */}
           <div>
-            <label htmlFor="email" className="mb-2 block text-sm">
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-gray-200"
+            >
               Email address
             </label>
+
             <input
               id="email"
               type="email"
@@ -132,14 +162,19 @@ const Register = () => {
               placeholder="you@example.com"
               autoComplete="email"
               required
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 outline-none focus:border-violet-500"
+              className="w-full rounded-xl border border-white/10 bg-[#353535] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-white/40 focus:ring-2 focus:ring-white/5"
             />
           </div>
 
+          {/* Password field */}
           <div>
-            <label htmlFor="password" className="mb-2 block text-sm">
+            <label
+              htmlFor="password"
+              className="mb-2 block text-sm font-medium text-gray-200"
+            >
               Password
             </label>
+
             <input
               id="password"
               type="password"
@@ -150,14 +185,19 @@ const Register = () => {
               autoComplete="new-password"
               minLength={8}
               required
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 outline-none focus:border-violet-500"
+              className="w-full rounded-xl border border-white/10 bg-[#353535] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-white/40 focus:ring-2 focus:ring-white/5"
             />
           </div>
 
+          {/* Confirm password field */}
           <div>
-            <label htmlFor="confirmPassword" className="mb-2 block text-sm">
+            <label
+              htmlFor="confirmPassword"
+              className="mb-2 block text-sm font-medium text-gray-200"
+            >
               Confirm password
             </label>
+
             <input
               id="confirmPassword"
               type="password"
@@ -168,37 +208,41 @@ const Register = () => {
               autoComplete="new-password"
               minLength={8}
               required
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 outline-none focus:border-violet-500"
+              className="w-full rounded-xl border border-white/10 bg-[#353535] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-white/40 focus:ring-2 focus:ring-white/5"
             />
           </div>
 
+          {/* Display registration errors */}
           {error && (
-            <p role="alert" className="text-sm text-red-400">
+            <p
+              role="alert"
+              className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400"
+            >
               {error}
             </p>
           )}
 
-          {success && (
-            <p role="status" className="text-sm text-green-400">
-              {success}
-            </p>
-          )}
-
+          {/* Submit button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-violet-600 py-3 font-semibold transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl bg-white py-3 text-sm font-semibold text-[#212121] transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 
+        {/* Link to login page */}
         <p className="mt-6 text-center text-sm text-gray-400">
           Already have an account?{" "}
-          <Link to="/login" className="text-violet-400 hover:text-violet-300">
+          <Link
+            to="/login"
+            className="font-medium text-white underline-offset-4 transition hover:underline"
+          >
             Sign in
           </Link>
         </p>
+
       </div>
     </div>
   );
